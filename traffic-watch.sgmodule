@@ -1,0 +1,15 @@
+#!name=VPS Traffic Watch
+#!desc=VPS 流量面板、心跳上报和本地快捷状态页。BASE_URL 指向你的 Docker 服务公开地址。
+#!arguments=BASE_URL=https%3A%2F%2Fwatch.example.com&API_TOKEN=change-me&SURGE_DEVICE=iPhone&PANEL_INTERVAL=60&HEARTBEAT_CRON=*/5%20*%20*%20*%20*
+#!requirement=CORE_VERSION>=20 && (SYSTEM = 'iOS' || SYSTEM = 'macOS')
+
+[Panel]
+VPSWatch = title="VPS Watch",content="Loading",style=info,script-name=vpswatch-panel,update-interval=%PANEL_INTERVAL%
+
+[Script]
+vpswatch-panel = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-panel.js,script-update-interval=300,argument=baseUrl=%BASE_URL%&token=%API_TOKEN%&device=%SURGE_DEVICE%
+vpswatch-heartbeat = type=cron,cronexp="%HEARTBEAT_CRON%",timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-heartbeat.js,script-update-interval=300,argument=baseUrl=%BASE_URL%&token=%API_TOKEN%&device=%SURGE_DEVICE%
+vpswatch-guard = type=http-request,pattern=^http:\/\/vpswatch\.local\/(status|panel|report),timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-guard.js,script-update-interval=300,argument=baseUrl=%BASE_URL%&token=%API_TOKEN%&device=%SURGE_DEVICE%
+
+[URL Rewrite]
+^http:\/\/vpswatch\.local\/?$ http://vpswatch.local/status 302

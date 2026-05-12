@@ -2,17 +2,21 @@ var args = parseArgs($argument || "");
 var baseUrl = trimSlash(args.baseUrl || "");
 var token = args.token || "";
 
-if (!baseUrl || !token) {
+if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
   $done({
     title: "VPS Watch",
-    content: "Missing BASE_URL or API_TOKEN",
+    content: "Open module arguments and fill BASEURL + TOKEN",
     style: "error",
     icon: "exclamationmark.triangle.fill"
   });
 } else {
   $httpClient.get({
-    url: baseUrl + "/api/public/panel?token=" + encodeURIComponent(token),
-    headers: { "Accept": "application/json" }
+    url: baseUrl + "/api/public/panel",
+    headers: {
+      "Accept": "application/json",
+      "X-API-Token": token,
+      "Authorization": "Bearer " + token
+    }
   }, function (error, response, data) {
     if (error || !data) {
       $done({

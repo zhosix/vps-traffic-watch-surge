@@ -1,15 +1,16 @@
 #!name=VPS Traffic Watch
-#!desc=VPS 流量面板、心跳上报和本地快捷状态页。启用模块时请在参数里填写后端地址和 TOKEN。
-#!arguments=BASEURL=https%3A%2F%2Fwatch.example.com&TOKEN=PASTE_TOKEN_HERE&DEVICE=iPhone&PANELINTERVAL=60
+#!desc=VPS 流量面板、心跳上报和本地快捷状态页。
+#!arguments=BASEURL:https%3A%2F%2Fwatch.example.com,TOKEN:PASTE_TOKEN_HERE,DEVICE:iPhone,PANELINTERVAL:60
+#!arguments-desc=[参数设置]\n\n⓵ BASEURL: 你的 VPS Traffic Watch 后端地址，例如 https://watch.example.com。\n\n⓶ TOKEN: 后端 apiToken 或 surge.sharedSecret。\n\n⓷ DEVICE: 显示在网页端的 Surge 设备名称。\n\n⓸ PANELINTERVAL: Surge 面板刷新间隔，单位秒。
 #!requirement=CORE_VERSION>=20 && (SYSTEM = 'iOS' || SYSTEM = 'macOS')
 
 [Panel]
-VPSWatch = title="VPS Watch",content="Loading",style=info,script-name=vpswatch-panel,update-interval=%PANELINTERVAL%
+VPSWatch = title="VPS Watch",content="Loading",style=info,script-name=vpswatch-panel,update-interval={{{PANELINTERVAL}}}
 
 [Script]
-vpswatch-panel = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-panel.js,script-update-interval=300,argument=baseUrl=%BASEURL%&token=%TOKEN%&device=%DEVICE%
-vpswatch-heartbeat = type=cron,cronexp="*/5 * * * *",timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-heartbeat.js,script-update-interval=300,argument=baseUrl=%BASEURL%&token=%TOKEN%&device=%DEVICE%
-vpswatch-guard = type=http-request,pattern=^http:\/\/vpswatch\.local\/(status|panel|report),timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-guard.js,script-update-interval=300,argument=baseUrl=%BASEURL%&token=%TOKEN%&device=%DEVICE%
+vpswatch-panel = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-panel.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
+vpswatch-heartbeat = type=cron,cronexp="*/5 * * * *",timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-heartbeat.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
+vpswatch-guard = type=http-request,pattern=^http:\/\/vpswatch\.local\/(status|panel|report),timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-guard.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
 
 [URL Rewrite]
 ^http:\/\/vpswatch\.local\/?$ http://vpswatch.local/status 302

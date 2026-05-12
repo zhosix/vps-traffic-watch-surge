@@ -28,5 +28,6 @@ https://watch.example.com?token=YOUR_TOKEN&device=iPhone
 Local quick pages after enabling the module:
 
 - `http://vpswatch.local/status`: show current VPS status and send a normal report.
+- `http://vpswatch.local/summary`: ask the backend to push the current traffic summary to Telegram.
 - `http://vpswatch.local/warning?message=...`: send a warning report, which becomes a backend alert.
 - `http://vpswatch.local/critical?message=...`: send a critical report, which can trigger Telegram and auto-block rules.

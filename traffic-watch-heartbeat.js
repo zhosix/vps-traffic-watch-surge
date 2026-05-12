@@ -3,7 +3,7 @@ var baseUrl = trimSlash(args.baseUrl || "");
 var token = args.token || "";
 var device = args.device || env("device-model") || "Surge";
 
-if (!baseUrl || !token) {
+if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
   $done();
 } else {
   var body = {
@@ -21,8 +21,12 @@ if (!baseUrl || !token) {
     }
   };
   $httpClient.post({
-    url: baseUrl + "/api/surge/report?token=" + encodeURIComponent(token),
-    headers: { "Content-Type": "application/json" },
+    url: baseUrl + "/api/surge/report",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Token": token,
+      "Authorization": "Bearer " + token
+    },
     body: JSON.stringify(body)
   }, function () {
     $done();

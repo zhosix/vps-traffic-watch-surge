@@ -3,13 +3,17 @@ var baseUrl = trimSlash(args.baseUrl || "");
 var token = args.token || "";
 var device = args.device || "Surge";
 
-if (!baseUrl || !token) {
-  respond(500, "VPS Watch", "Missing BASE_URL or API_TOKEN");
+if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
+  respond(500, "VPS Watch", "Open module arguments and fill BASEURL + TOKEN");
 } else {
   postReport();
   $httpClient.get({
-    url: baseUrl + "/api/public/panel?token=" + encodeURIComponent(token),
-    headers: { "Accept": "application/json" }
+    url: baseUrl + "/api/public/panel",
+    headers: {
+      "Accept": "application/json",
+      "X-API-Token": token,
+      "Authorization": "Bearer " + token
+    }
   }, function (error, response, data) {
     if (error || !data) {
       respond(502, "VPS Watch", String(error || "No response"));
@@ -39,8 +43,12 @@ function postReport() {
     }
   };
   $httpClient.post({
-    url: baseUrl + "/api/surge/report?token=" + encodeURIComponent(token),
-    headers: { "Content-Type": "application/json" },
+    url: baseUrl + "/api/surge/report",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Token": token,
+      "Authorization": "Bearer " + token
+    },
     body: JSON.stringify(body)
   }, function () {});
 }

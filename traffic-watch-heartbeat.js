@@ -3,6 +3,7 @@ var setup = normalizeSetup(args);
 var baseUrl = setup.baseUrl;
 var token = setup.token;
 var device = setup.device || env("device-model") || "Surge";
+var HEARTBEAT_KEY = "vpswatch.lastHeartbeat";
 
 if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
   $done();
@@ -18,20 +19,33 @@ if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
     message: "Surge heartbeat",
     extra: {
       system: env("system"),
-      surgeVersion: env("surge-version")
+      surgeVersion: env("surge-version"),
+      ssid: networkName(),
+      bssid: wifiValue("bssid"),
+      lastPanelAt: lastPanelAt()
     }
   };
   $httpClient.post({
     url: baseUrl + "/api/surge/report",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-Token": token,
-      "Authorization": "Bearer " + token
-    },
+    headers: authHeaders(),
     body: JSON.stringify(body)
-  }, function () {
+  }, function (error, response) {
+    writeStore(HEARTBEAT_KEY, JSON.stringify({
+      time: Date.now(),
+      ok: !error && response && response.status >= 200 && response.status < 300,
+      status: response ? response.status : 0,
+      error: error ? String(error) : ""
+    }));
     $done();
   });
+}
+
+function authHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "X-API-Token": token,
+    "Authorization": "Bearer " + token
+  };
 }
 
 function networkName() {
@@ -41,11 +55,39 @@ function networkName() {
   return "cellular-or-unknown";
 }
 
+function wifiValue(key) {
+  if (typeof $network !== "undefined" && $network.wifi && $network.wifi[key]) {
+    return String($network.wifi[key]);
+  }
+  return "";
+}
+
 function env(key) {
   if (typeof $environment !== "undefined" && $environment[key]) {
     return String($environment[key]);
   }
   return "";
+}
+
+function lastPanelAt() {
+  var cached = readStore("vpswatch.panel.cache");
+  if (!cached) return "";
+  try {
+    var parsed = JSON.parse(cached);
+    return parsed.time ? new Date(Number(parsed.time)).toISOString() : "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function readStore(key) {
+  if (typeof $persistentStore === "undefined") return "";
+  return $persistentStore.read(key) || "";
+}
+
+function writeStore(key, value) {
+  if (typeof $persistentStore === "undefined") return false;
+  return $persistentStore.write(value, key);
 }
 
 function parseArgs(input) {

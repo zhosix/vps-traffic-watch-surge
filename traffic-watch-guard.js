@@ -1,7 +1,8 @@
 var args = parseArgs($argument || "");
-var baseUrl = trimSlash(args.baseUrl || "");
-var token = args.token || "";
-var device = args.device || "Surge";
+var setup = normalizeSetup(args);
+var baseUrl = setup.baseUrl;
+var token = setup.token;
+var device = setup.device || "Surge";
 
 if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
   respond(500, "VPS Watch", "Open module arguments and fill BASEURL + TOKEN");
@@ -88,6 +89,35 @@ function parseArgs(input) {
     if (index < 0) return;
     out[decodeURIComponent(pair.slice(0, index))] = decodeURIComponent(pair.slice(index + 1));
   });
+  return out;
+}
+
+function normalizeSetup(args) {
+  var rawBase = args.baseUrl || args.baseurl || "";
+  var embedded = parseBaseUrl(rawBase);
+  return {
+    baseUrl: trimSlash(embedded.baseUrl || rawBase),
+    token: args.token || args.TOKEN || embedded.token || "",
+    device: args.device || args.DEVICE || embedded.device || ""
+  };
+}
+
+function parseBaseUrl(value) {
+  var raw = String(value || "");
+  var out = { baseUrl: raw };
+  var pipeParts = raw.split("|");
+  if (pipeParts.length >= 2) {
+    out.baseUrl = pipeParts[0];
+    out.token = pipeParts[1];
+    out.device = pipeParts[2] || "";
+    return out;
+  }
+  var q = raw.indexOf("?");
+  if (q < 0) return out;
+  out.baseUrl = raw.slice(0, q);
+  var query = parseArgs(raw.slice(q + 1));
+  out.token = query.token || query.TOKEN || query.apiToken || query.apitoken || "";
+  out.device = query.device || query.DEVICE || "";
   return out;
 }
 

@@ -39,19 +39,33 @@ function buildPanel(payload) {
   var warnings = (snap.security && snap.security.warnings) || [];
   var providers = snap.providers || [];
   var lines = [];
-  if (payload.content) lines.push(payload.content);
+
   if (current.timestamp) {
-    lines.push("主机 CPU " + num(system.cpuPercent, 1) + "% · MEM " + num(system.memUsedPercent, 1) + "% · TCP " + num(system.tcpEstablished, 0));
+    var totalMbps = num((current.rxMbps || 0) + (current.txMbps || 0), 1);
+    var localGb = num((snap.localUsage || 0) / 1e9, 2);
+    var limitGb = num((snap.monthlyLimit || 0) / 1e9, 2);
+    var usedPct = snap.monthlyLimit ? num((snap.localUsage / snap.monthlyLimit) * 100, 1) : "0.0";
+    lines.push("吞吐 " + totalMbps + " Mbps | 已用 " + localGb + " / " + limitGb + " GB (" + usedPct + "%)");
+    lines.push("CPU " + num(system.cpuPercent, 1) + "%  MEM " + num(system.memUsedPercent, 1) + "%  TCP " + num(system.tcpEstablished, 0));
+    if (system.load1) lines.push("负载 " + num(system.load1, 2) + " / " + num(system.load5, 2) + " / " + num(system.load15, 2));
+    if (system.diskUsedPercent) lines.push("磁盘 " + num(system.diskUsedPercent, 1) + "% free " + num((system.diskFreeBytes || 0) / 1e9, 1) + " GB");
   }
-  if (providers.length && providers[0].name) {
-    lines.push("对账 " + providers[0].name + " · 差异 " + num(providers[0].comparePercent, 1) + "%");
+
+  if (providers.length) {
+    var p = providers[0];
+    if (p.name && p.usedBytes) {
+      var drift = p.comparePercent != null ? num(p.comparePercent, 1) : "--";
+      var source = p.source ? " · " + p.source : "";
+      lines.push("对账 " + p.name + source + " | 差异 " + drift + "%");
+    }
   }
-  if (alerts.length || warnings.length) {
-    lines.push("风险 " + alerts.length + " · 安全提醒 " + warnings.length);
-  }
+
+  if (alerts.length) lines.push("待处理风险 " + alerts.length + " 项");
+  if (warnings.length) lines.push("安全提醒 " + warnings.length + " 项");
+
   return {
-    title: payload.title || "VPS Watch",
-    content: lines.length ? lines.join("\n") : "-",
+    title: (snap.current && snap.current.nodeName) || payload.title || "VPS Watch",
+    content: lines.length ? lines.join("\n") : (payload.content || "-"),
     style: panelStyle(payload.style, alerts),
     icon: payload.icon || panelIcon(alerts),
     "icon-color": iconColor(panelStyle(payload.style, alerts))
@@ -59,9 +73,7 @@ function buildPanel(payload) {
 }
 
 function activeAlerts(items) {
-  return items.filter(function (item) {
-    return !item.resolved;
-  });
+  return items.filter(function (item) { return !item.resolved; });
 }
 
 function panelStyle(style, alerts) {
@@ -120,10 +132,10 @@ function shortText(value) {
 }
 
 function iconColor(style) {
-  if (style === "error") return "#BD2F42";
-  if (style === "alert") return "#B67812";
-  if (style === "good") return "#087F7A";
-  return "#4856C7";
+  if (style === "error") return "#E0556A";
+  if (style === "alert") return "#E2A33B";
+  if (style === "good") return "#3BA99C";
+  return "#5B8DEF";
 }
 
 function readStore(key) {

@@ -1,5 +1,5 @@
 #!name=VPS Traffic Watch
-#!desc=VPS 流量面板、心跳上报、本地快捷状态页、手动 warning/critical 上报。
+#!desc=VPS 流量面板、心跳上报、本地快捷状态页、手动 warning/critical 上报、Telegram 摘要触发。
 #!arguments=BASEURL:https%3A%2F%2Fwatch.example.com,TOKEN:PASTE_TOKEN_HERE,DEVICE:iPhone,PANELINTERVAL:60
 #!arguments-desc=[参数设置]\n\n⓵ BASEURL: 你的 VPS Traffic Watch 后端地址，例如 https://watch.example.com。\n\n⓶ TOKEN: 后端 apiToken 或 surge.sharedSecret。\n\n⓷ DEVICE: 显示在网页端的 Surge 设备名称。\n\n⓸ PANELINTERVAL: Surge 面板刷新间隔，单位秒。
 #!requirement=CORE_VERSION>=20 && (SYSTEM = 'iOS' || SYSTEM = 'macOS')
@@ -10,7 +10,7 @@ VPSWatch = title="VPS Watch",content="Loading",style=info,script-name=vpswatch-p
 [Script]
 vpswatch-panel = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-panel.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
 vpswatch-heartbeat = type=cron,cronexp="*/5 * * * *",timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-heartbeat.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
-vpswatch-guard = type=http-request,pattern=^http:\/\/vpswatch\.local\/(status|panel|report|warning|critical),timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-guard.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
+vpswatch-guard = type=http-request,pattern=^http:\/\/vpswatch\.local\/(status|panel|report|warning|critical|summary),timeout=10,script-path=https://raw.githubusercontent.com/zhosix/vps-traffic-watch-surge/main/traffic-watch-guard.js,script-update-interval=300,argument=baseUrl={{{BASEURL}}}&token={{{TOKEN}}}&device={{{DEVICE}}}
 
 [URL Rewrite]
 ^http:\/\/vpswatch\.local\/?$ http://vpswatch.local/status 302

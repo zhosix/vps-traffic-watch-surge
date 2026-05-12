@@ -1,6 +1,7 @@
 var args = parseArgs($argument || "");
-var baseUrl = trimSlash(args.baseUrl || "");
-var token = args.token || "";
+var setup = normalizeSetup(args);
+var baseUrl = setup.baseUrl;
+var token = setup.token;
 
 if (!baseUrl || !token || token === "PASTE_TOKEN_HERE") {
   $done({
@@ -63,6 +64,32 @@ function parseArgs(input) {
     var value = decodeURIComponent(pair.slice(index + 1));
     out[key] = value;
   });
+  return out;
+}
+
+function normalizeSetup(args) {
+  var rawBase = args.baseUrl || args.baseurl || "";
+  var embedded = parseBaseUrl(rawBase);
+  return {
+    baseUrl: trimSlash(embedded.baseUrl || rawBase),
+    token: args.token || args.TOKEN || embedded.token || ""
+  };
+}
+
+function parseBaseUrl(value) {
+  var raw = String(value || "");
+  var out = { baseUrl: raw };
+  var pipeParts = raw.split("|");
+  if (pipeParts.length >= 2) {
+    out.baseUrl = pipeParts[0];
+    out.token = pipeParts[1];
+    return out;
+  }
+  var q = raw.indexOf("?");
+  if (q < 0) return out;
+  out.baseUrl = raw.slice(0, q);
+  var query = parseArgs(raw.slice(q + 1));
+  out.token = query.token || query.TOKEN || query.apiToken || query.apitoken || "";
   return out;
 }
 
